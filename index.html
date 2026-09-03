@@ -60,7 +60,7 @@ iframe{flex:1 1 auto;width:100%;border:0;background:var(--ground)}
 <script>
 const VIEWS = [
   {id:'bench',    label:'兵推台',   src:'bench.html',     title:'泡酸 BENCH 兵推台'},
-  {id:'frame222', label:'配置圖',   src:'frame222.html',  title:'Bench 配置圖'},
+  {id:'frame222', label:'配置圖',   src:'frame222.html',  title:'Bench 配置圖', pop:'assets/frame222.png'},
 ];
 
 const tabs = document.getElementById('tabs');
@@ -81,7 +81,7 @@ function show(){
   const id = location.hash.slice(1);
   const v = VIEWS.find(x => x.id === id) || VIEWS[0];
   if (view.getAttribute('src') !== v.src) view.src = v.src;
-  pop.href = v.src;
+  pop.href = v.pop || v.src;
   document.title = v.title + ' — MDP Line Slot';
   tabs.querySelectorAll('button').forEach(b => {
     b.setAttribute('aria-current', String(b.dataset.id === v.id));
