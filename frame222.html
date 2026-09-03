@@ -5,12 +5,36 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Frame 222</title>
 <style>
-  html,body{height:100%;margin:0;background:#F2F5F3}
-  @media (prefers-color-scheme:dark){html,body{background:#0F1513}}
-  img{display:block;width:100%;height:100%;object-fit:contain}
+  html{height:100%;background:#F2F5F3}
+  @media (prefers-color-scheme:dark){html{background:#0F1513}}
+  body{
+    margin:0;padding:8px;min-height:100%;
+    display:grid;justify-content:safe center;align-content:safe center;
+  }
+  /* 尺寸由 JS 寫成固定 px，瀏覽器縮放才會跟著放大；未啟用 JS 時退回原生尺寸 */
+  img{display:block;max-width:none}
 </style>
 </head>
 <body>
-<img src="assets/frame222.png" width="708" height="896" alt="Bench 泡酸槽 Slot 配置圖">
+<img id="pic" src="assets/frame222.png" width="708" height="896" alt="Bench 泡酸槽 Slot 配置圖">
+<script>
+const NW = 708, NH = 896, PAD = 16;
+const pic = document.getElementById('pic');
+let dpr = devicePixelRatio;
+
+function fit(){
+  const s = Math.min((innerWidth - PAD) / NW, (innerHeight - PAD) / NH);
+  pic.style.width  = Math.round(NW * s) + 'px';
+  pic.style.height = Math.round(NH * s) + 'px';
+}
+
+addEventListener('resize', () => {
+  // 縮放會改變 devicePixelRatio：保留目前 px 尺寸，讓圖跟著放大並可捲動
+  if (devicePixelRatio !== dpr) { dpr = devicePixelRatio; return; }
+  fit();   // 單純調整視窗大小才重新貼合
+});
+
+fit();
+</script>
 </body>
 </html>
