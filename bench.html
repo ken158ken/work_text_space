@@ -1,0 +1,493 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>泡酸 BENCH 兵推台</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans+Condensed:wght@500;700&display=swap">
+</head>
+<body>
+<style>
+:root{
+  --ground:#F2F5F3; --surface:#FFFFFF; --surface2:#E9EEEB; --line:#CDD6D2; --ink:#16211E; --muted:#66756F;
+  --accent:#0E7C66; --accent-ink:#FFFFFF; --accent-soft:#D8EFE8;
+  --warn:#B9771A; --warn-soft:#F6E9D3; --crit:#B5302C; --crit-soft:#F7DCDA; --ok:#2C7A4B;
+  --acid:#5B7F3A; --screen:#0F1A17; --screen-ink:#BFEBD6; --screen-dim:#5E8E7A; --screen-red:#FF6B62; --screen-amber:#F2B84B;
+  --tank:#DCE7E2; --tank-na:#EEF1F0; --shadow:0 1px 2px rgba(22,33,30,.08),0 4px 12px rgba(22,33,30,.06);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --ground:#0F1513; --surface:#182120; --surface2:#1F2A28; --line:#2F3D39; --ink:#E4ECE8; --muted:#8FA39B;
+    --accent:#3FBF9E; --accent-ink:#0B1512; --accent-soft:#1B3A32;
+    --warn:#E0A44A; --warn-soft:#3B2E14; --crit:#F07470; --crit-soft:#42201E; --ok:#5FC585;
+    --acid:#9BC46B; --screen:#070C0A; --screen-ink:#BFEBD6; --screen-dim:#4E7A68;
+    --tank:#233330; --tank-na:#1A2422; --shadow:0 1px 2px rgba(0,0,0,.4),0 4px 14px rgba(0,0,0,.35);
+  }
+}
+:root[data-theme="dark"]{
+  --ground:#0F1513; --surface:#182120; --surface2:#1F2A28; --line:#2F3D39; --ink:#E4ECE8; --muted:#8FA39B;
+  --accent:#3FBF9E; --accent-ink:#0B1512; --accent-soft:#1B3A32;
+  --warn:#E0A44A; --warn-soft:#3B2E14; --crit:#F07470; --crit-soft:#42201E; --ok:#5FC585;
+  --acid:#9BC46B; --screen:#070C0A; --screen-ink:#BFEBD6; --screen-dim:#4E7A68;
+  --tank:#233330; --tank-na:#1A2422; --shadow:0 1px 2px rgba(0,0,0,.4),0 4px 14px rgba(0,0,0,.35);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--ground);color:var(--ink);font-family:"Noto Sans TC",system-ui,-apple-system,"PingFang TC","Microsoft JhengHei",sans-serif;font-size:13px;line-height:1.5}
+.mono{font-family:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;font-variant-numeric:tabular-nums}
+h1,h2,h3{font-family:"IBM Plex Sans Condensed","Noto Sans TC",sans-serif;margin:0;text-wrap:balance}
+button{font:inherit;cursor:pointer;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:4px;padding:4px 10px}
+button:hover{border-color:var(--accent)}
+button:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+button.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+button.small{padding:2px 8px;font-size:12px}
+button:disabled{opacity:.45;cursor:not-allowed}
+select,input{font:inherit;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:4px;padding:3px 6px}
+.eyebrow{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:500}
+
+/* top bar */
+.topbar{display:flex;align-items:center;gap:16px;padding:12px 20px;background:var(--surface);border-bottom:1px solid var(--line);flex-wrap:wrap;position:sticky;top:0;z-index:5}
+.topbar h1{font-size:20px;font-weight:700;letter-spacing:.01em}
+.topbar h1 small{font-family:"Noto Sans TC";font-weight:400;font-size:12px;color:var(--muted);margin-left:8px}
+.clock{font-size:22px;font-weight:600;padding:2px 10px;background:var(--screen);color:var(--screen-ink);border-radius:4px;min-width:118px;text-align:center}
+.ctrl{display:flex;align-items:center;gap:8px}
+.ctrl label{color:var(--muted);font-size:12px}
+.scen{display:flex;gap:6px;flex-wrap:wrap}
+.scen button.on{background:var(--accent-soft);border-color:var(--accent);font-weight:500}
+
+.wrap{padding:16px 20px;display:grid;gap:16px}
+.scen-note{padding:10px 14px;background:var(--accent-soft);border-left:3px solid var(--accent);border-radius:0 4px 4px 0;max-width:80ch}
+.scen-note b{font-weight:700}
+
+/* layout strip */
+.layout-wrap{display:grid;gap:6px}
+.layout{display:flex;align-items:stretch;gap:4px;overflow-x:auto;padding:2px 0}
+.lo{border:1px solid var(--line);border-radius:3px;padding:4px 8px;min-width:78px;display:flex;flex-direction:column;justify-content:center;background:var(--surface);font-size:11px;color:var(--muted);white-space:nowrap}
+.lo b{font-family:"IBM Plex Mono",monospace;font-weight:600;color:var(--ink);font-size:11.5px}
+.lo.hood{background:var(--accent-soft);border-color:var(--accent)}
+.lo.hood b{color:var(--accent)}
+.lo-arrow{align-self:center;color:var(--muted);font-style:normal;font-size:12px}
+/* benches */
+.benches{display:grid;grid-template-columns:repeat(4,minmax(240px,1fr));gap:14px;overflow-x:auto}
+.bench{background:var(--surface);border:1px solid var(--line);border-radius:6px;box-shadow:var(--shadow);display:flex;flex-direction:column;min-width:240px;transition:outline-color .15s;outline:2px solid transparent}
+.bench.drop{outline-color:var(--accent)}
+.bench.alarm{outline-color:var(--crit)}
+.bench-head{padding:10px 12px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+.bench-head h2{font-size:17px}
+.bench-head .sub{font-size:11px;color:var(--muted);letter-spacing:.04em}
+.kit{font-size:12px;color:var(--muted)}
+.kit b{font-family:"IBM Plex Mono",monospace;color:var(--ink);font-weight:600}
+.ant{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted)}
+.ant .dot{width:9px;height:9px;border-radius:50%;background:var(--line);box-shadow:0 0 0 2px var(--surface)}
+.ant .dot.live{background:var(--accent);animation:pulse 1.6s infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--accent) 50%,transparent)}100%{box-shadow:0 0 0 8px transparent}}
+@media (prefers-reduced-motion:reduce){.ant .dot.live{animation:none}}
+.tanks{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;padding:10px 12px}
+.tank{border-radius:6px 6px 10px 10px;background:var(--tank);padding:8px 6px 6px;text-align:center;border:1px solid var(--line);position:relative;min-height:92px;display:flex;flex-direction:column;justify-content:space-between}
+.tank.na{background:var(--tank-na);color:var(--muted);border-style:dashed}
+.tank.diw{background:var(--accent-soft)}
+.tank.diw .chem{color:var(--accent)}
+.tank .pos{font-family:"IBM Plex Sans Condensed";font-weight:700;font-size:14px}
+.tank .chem{font-family:"IBM Plex Mono",monospace;font-size:12px;font-weight:600;color:var(--acid)}
+.tank .lt{font-family:"IBM Plex Mono",monospace;font-size:11px}
+.tank .lt b{font-weight:600}
+.tank .occ{display:flex;justify-content:center;gap:3px;min-height:10px}
+.tank .occ i{display:block;width:8px;height:8px;border-radius:2px;background:var(--accent)}
+.tank .occ i.over{background:var(--crit)}
+.tank.due{background:var(--warn-soft);border-color:var(--warn)}
+.tank.due::after{content:"請換酸";position:absolute;top:-8px;right:4px;font-size:10px;background:var(--warn);color:#fff;padding:0 4px;border-radius:3px}
+.tank .cnt{font-family:"IBM Plex Mono",monospace;font-size:10px;color:var(--muted)}
+.tank.due .cnt{color:var(--warn);font-weight:600}
+
+/* head-up screen */
+.hud{margin:0 12px 12px;background:var(--screen);color:var(--screen-ink);border-radius:4px;padding:8px 10px;font-family:"IBM Plex Mono",monospace;font-size:12px;min-height:150px;flex:1}
+.hud .hd{color:var(--screen-dim);font-size:10px;letter-spacing:.1em;display:flex;justify-content:space-between;margin-bottom:6px}
+.hud .row{display:grid;grid-template-columns:1fr auto;gap:2px 8px;padding:5px 0;border-top:1px solid #1E2E29;cursor:pointer}
+.hud .row:hover{background:#15231F}
+.hud .row.sel{background:#173028}
+.hud .row .n{font-weight:600}
+.hud .row .p{color:var(--screen-dim);font-size:11px}
+.hud .row .st{grid-column:1/-1;display:flex;gap:6px;align-items:center;flex-wrap:wrap;font-size:11px}
+.hud .row.red .n,.hud .red{color:var(--screen-red)}
+.hud .amber{color:var(--screen-amber)}
+.hud .tmr{font-weight:600}
+.hud .empty{color:var(--screen-dim);padding:12px 0;text-align:center}
+.hud button{background:#1E3A31;border-color:#2E5548;color:var(--screen-ink);padding:1px 7px;font-size:11px;border-radius:3px}
+.hud button.go{background:#1F6B54;border-color:#2C8E70;color:#fff}
+.hud button.stop{background:#7A2E2A;border-color:#A54640;color:#fff}
+.hud .due{background:#2A2416;border:1px solid #6A5525;padding:3px 6px;border-radius:3px;color:var(--screen-amber);margin-bottom:4px;font-size:11px}
+
+/* lower grid */
+.lower{display:grid;grid-template-columns:1.1fr 1.3fr 1fr;gap:14px;align-items:start}
+@media (max-width:1100px){.lower{grid-template-columns:1fr 1fr}.benches{grid-template-columns:repeat(2,1fr)}}
+@media (max-width:700px){.lower{grid-template-columns:1fr}.benches{grid-template-columns:1fr}}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:6px;box-shadow:var(--shadow)}
+.panel>header{padding:10px 14px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;gap:8px}
+.panel>header h3{font-size:15px}
+.panel .body{padding:12px 14px}
+
+/* staging cards */
+.stage{min-height:70px;display:flex;flex-wrap:wrap;gap:8px;padding:10px;border:1px dashed var(--line);border-radius:6px;margin:12px 14px}
+.stage.drop{border-color:var(--accent);background:var(--accent-soft)}
+.rc{border:1px solid var(--line);background:var(--surface2);border-radius:4px;padding:6px 8px;cursor:grab;min-width:120px;font-size:12px;position:relative}
+.rc:active{cursor:grabbing}
+.rc.sel{outline:2px solid var(--accent)}
+.rc.other{border-color:var(--warn)}
+.rc.done{opacity:.6}
+.rc .id{font-family:"IBM Plex Mono",monospace;font-weight:600;font-size:13px}
+.rc .pn{color:var(--muted)}
+.rc .step{font-size:11px;margin-top:2px}
+.sendrow{display:flex;gap:6px;flex-wrap:wrap;padding:0 14px 12px;align-items:center}
+.sendrow span{color:var(--muted);font-size:12px}
+
+/* dispatcher */
+.deploy{display:grid;gap:8px}
+.deploy .slotrow{display:grid;grid-template-columns:28px 1fr 1fr 56px;gap:6px;align-items:center}
+.deploy .slotrow .pos{font-family:"IBM Plex Sans Condensed";font-weight:700}
+.deploy .kitrow{display:grid;grid-template-columns:auto 1fr;gap:8px;align-items:center;margin-top:4px}
+.ltlist{width:100%;border-collapse:collapse;font-size:12px}
+.ltlist th{text-align:left;color:var(--muted);font-weight:500;font-size:11px;letter-spacing:.05em;padding:4px 6px;border-bottom:1px solid var(--line)}
+.ltlist td{padding:4px 6px;border-bottom:1px solid var(--line)}
+.ltlist td.mono{font-family:"IBM Plex Mono",monospace}
+.tpl{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:10px;padding:8px 10px;background:var(--surface2);border-radius:4px}
+.tpl select{min-width:150px}
+.tpl input{width:170px}
+.thr{display:grid;grid-template-columns:repeat(3,1fr);gap:6px 12px}
+.thr label{display:grid;grid-template-columns:1fr 64px;align-items:center;gap:6px;font-family:"IBM Plex Mono",monospace;font-size:12px}
+.thr input{width:64px;text-align:right}
+.cnt.near{color:var(--warn)}.cnt.due{color:var(--crit);font-weight:600}
+.ltlist tr.used td:first-child::before{content:"●";color:var(--accent);margin-right:4px;font-size:9px}
+.addlt{display:grid;grid-template-columns:1fr 1fr 1fr 1.4fr auto;gap:6px;margin-top:8px}
+.blank{color:var(--muted)}
+
+/* log */
+.log{font-family:"IBM Plex Mono",monospace;font-size:11.5px;max-height:320px;overflow:auto;padding:8px 14px}
+.log div{padding:2px 0;border-bottom:1px solid var(--line);display:grid;grid-template-columns:62px 1fr;gap:8px}
+.log .t{color:var(--muted)}
+.log .k-alarm{color:var(--crit);font-weight:600}
+.log .k-warn{color:var(--warn)}
+.log .k-auto{color:var(--accent)}
+.log .k-deploy{color:var(--acid)}
+
+/* record */
+.rec table{width:100%;border-collapse:collapse;font-size:12px}
+.rec th,.rec td{text-align:left;padding:5px 6px;border-bottom:1px solid var(--line);vertical-align:top}
+.rec th{color:var(--muted);font-weight:500;font-size:11px}
+.rec td.mono{font-family:"IBM Plex Mono",monospace}
+.rec .blank{color:var(--muted)}
+.rec .auto{color:var(--accent)}
+.rec .man{color:var(--warn)}
+.rec input.recin{width:100%;min-width:70px;background:transparent;border:1px solid transparent;border-radius:3px;padding:2px 4px;font-size:12px}
+.rec input.recin:hover{border-color:var(--line)}
+.rec input.recin:focus{border-color:var(--accent);background:var(--surface)}
+.rec .alarms{margin-top:8px;display:flex;flex-direction:column;gap:4px}
+.rec .alarms div{padding:4px 8px;border-radius:3px;background:var(--crit-soft);color:var(--crit);font-size:12px}
+.rec .alarms div.w{background:var(--warn-soft);color:var(--warn)}
+.pill{display:inline-block;padding:0 6px;border-radius:9px;font-size:10px;font-weight:500;line-height:16px}
+.pill.a{background:var(--accent-soft);color:var(--accent)}
+.pill.w{background:var(--warn-soft);color:var(--warn)}
+.pill.c{background:var(--crit-soft);color:var(--crit)}
+.pill.g{background:var(--surface2);color:var(--muted)}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:11px;color:var(--muted);padding:0 4px}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;vertical-align:-1px;margin-right:4px}
+</style>
+
+<div class="topbar">
+  <h1>泡酸 BENCH 兵推台<small>MDP Line · LT-M-087 / LT-M-088 / LT-E-109 / LT-M-136 · 一 hood 一天線 · LT# 自動寫入</small></h1>
+  <div class="clock mono" id="clock">08:00:00</div>
+  <div class="ctrl">
+    <button class="primary" id="btnPlay">▶ 開始</button>
+    <label>倍速</label>
+    <select id="speed"><option value="1">1×</option><option value="10">10×</option><option value="30" selected>30×</option><option value="120">120×</option></select>
+    <label><input type="checkbox" id="autoOp" checked> 自動作業員（到時自動按開始／結束）</label>
+  </div>
+  <div class="scen" id="scen"></div>
+</div>
+
+<div class="wrap">
+  <div class="scen-note" id="scenNote"></div>
+
+  <div class="layout-wrap"><div class="eyebrow">MDP Line layout · 4 座 MDP Chemical hood = BENCH 1~4（設備編號為準）</div><div class="layout" id="layout"></div></div>
+  <div class="benches" id="benches"></div>
+  <div class="legend">
+    <span><i style="background:var(--accent)"></i>桶內有 RC（方塊數 = 張數）</span>
+    <span><i style="background:var(--crit)"></i>超過上限時間</span>
+    <span><i style="background:var(--accent-soft);border:1px solid var(--accent)"></i>DIW 沖洗桶（無 LT#）</span>
+    <span><i style="background:var(--warn-soft);border:1px solid var(--warn)"></i>計數達門檻，請換酸</span>
+    <span>操作：拖曳 RC 卡到 BENCH（或點卡片再按「送入」），同一批 RC 就照該 BENCH 的設定一起跑；點抬頭螢幕上的列可看該 RC 的記錄。時間規則：A Soak 每 1000 wafer 1 分鐘（2–18 min）、B Soak 15–20 秒、C Soak 2–3 分鐘。</span>
+  </div>
+
+  <div class="lower">
+    <section class="panel" id="stagePanel">
+      <header><h3>待命區 / RC 卡（RFID tag 已綁）</h3><span class="eyebrow" id="stageCount"></span></header>
+      <div class="stage" id="stage"></div>
+      <div class="sendrow"><span>選取的 RC 送入：</span>
+        <span id="sendBtns"></span>
+        <button class="small" id="btnAddOther">＋ 加一張別套件的 RC</button>
+      </div>
+      <div class="body rec" id="rec"></div>
+    </section>
+
+    <section class="panel">
+      <header><h3>調度人員 · BENCH DEPLOY</h3>
+        <select id="depBench"></select></header>
+      <div class="body">
+        <div class="deploy" id="deploy"></div>
+        <div style="display:flex;gap:8px;margin-top:10px;align-items:center;flex-wrap:wrap"><button class="primary" id="btnApply">套用設定（寫入 slot_lt_history）</button><button class="small" id="btnCopy">複製到其他 BENCH</button></div>
+        <div class="tpl">
+          <span class="eyebrow">模板</span>
+          <select id="tplSel"></select>
+          <button class="small" id="btnTplApply">套用到此 BENCH</button>
+          <button class="small" id="btnTplAll">套用到全部</button>
+          <input id="tplName" placeholder="模板名稱（例：LID 標準）">
+          <button class="small" id="btnTplSave">存成模板</button>
+          <button class="small" id="btnTplDel" title="刪除選取的模板">刪除</button>
+        </div>
+        <h3 style="font-size:14px;margin:16px 0 6px">換酸門檻 · 依酸種（累計泡過幾顆零件 / RC 後需換酸）</h3>
+        <div class="thr" id="thr"></div>
+        <h3 style="font-size:14px;margin:16px 0 6px">LT 主檔 · Chemical Composition Log Book（PD-F-0208 數位化）</h3>
+        <table class="ltlist" id="ltlist"></table>
+        <div class="addlt">
+          <select id="newChem"></select><select id="newLiter"><option>20L</option><option>10L</option></select><input id="newBy" placeholder="配製人" value="MIV"><input id="newKit" placeholder="Kit name 註記（LID / TIAL…）"><button id="btnAddLt">＋ 新 LT#</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <header><h3>事件記錄（middleware → MES）</h3><button class="small" id="btnClearLog">清除</button></header>
+      <div class="log" id="log"></div>
+    </section>
+  </div>
+</div>
+
+<script>
+// ---------- domain ----------
+const CHEMS=['STM14','STM21','CLM4','STC11','STC13','CLM15'];const DIW='DIW';
+const STEPS={A:{name:'A Soak',chem:'STM14',min:120,max:1080,rinse:300,unit:'min'},
+             B:{name:'B Soak',chem:'STM21',min:15,max:20,rinse:40,unit:'sec'},
+             C:{name:'C Soak',chem:'CLM4',min:120,max:180,rinse:420,unit:'min'}};
+const ORDER=['A','B','C'];
+const KIT='5223554';
+const EQUIP=[{id:'LT-M-087',type:'MDP Chemical hood',note:'Soak A/B/C'},{id:'LT-M-088',type:'MDP Chemical hood',note:'Rinsing tank · Polish table'},{id:'LT-E-109',type:'MDP Chemical hood',note:'Polish table · Rinsing tank'},{id:'LT-M-136',type:'MDP Chemical hood',note:'Soak A/B/C'}];
+const PARTS=[['1','WATER BOX',9000],['2','LID',4000],['3','WATER BOX',12000],['4','WATER BOX',20000]];
+
+let sim, timer=null, speed=30, selected=null, scenKey='s1';
+const TPL_PRESET=[{name:'標準 A/B/C + DIW',slots:[['A','STM14',802],['B','STM21',803],['C','CLM4',804],['D','DIW',null]]},{name:'標準 A/B/C（無 DIW）',slots:[['A','STM14',802],['B','STM21',803],['C','CLM4',804],['D',null,null]]}];
+let templates=TPL_PRESET.map(t=>({...t}));
+try{const raw=localStorage.getItem('soak_templates');if(raw){const arr=JSON.parse(raw);if(Array.isArray(arr)&&arr.length)templates=arr}}catch(e){}
+function saveTemplates(){try{localStorage.setItem('soak_templates',JSON.stringify(templates))}catch(e){}}
+function renderTpl(){const sel=document.getElementById('tplSel');const cur=sel.value;sel.innerHTML=templates.map((t,i)=>`<option value="${i}">${t.name} · ${t.slots.map(x=>x[1]?(x[1]===DIW?'DIW':x[1]+(x[2]?'/'+x[2]:'')):'NA').join(' ')}</option>`).join('');if(cur&&templates[cur])sel.value=cur}
+function tplToChanges(t){return t.slots.map(([pos,chem,lt])=>{if(!chem)return [pos,null,null,false];if(chem===DIW)return [pos,DIW,null,true];const ok=sim.lt.find(l=>l.n===lt&&l.chem===chem);const alt=ok?ok:sim.lt.find(l=>l.chem===chem);return [pos,chem,alt?alt.n:null,true]})}
+
+function ltRow(n,chem,liter,by,date,kit){return {n,chem,liter,by,date,kit:kit||'',count:0,due:false,status:'active'}}
+const THR_DEFAULT={STM14:15,STM21:30,CLM4:20,STC11:20,STC13:20,CLM15:20};
+function baseLT(){return [
+  ltRow(802,'STM14','20L','MIV','9/1/26','LID'),ltRow(803,'STM21','20L','MIV','9/1/26','LID'),ltRow(804,'CLM4','20L','MIV','9/1/26','LID'),
+  ltRow(805,'STC11','10L','MIC','9/2/26'),ltRow(806,'STC13','10L','MIC','9/2/26'),
+  ltRow(807,'STM14','20L','MIR','9/2/26','TIAL'),ltRow(808,'STM21','20L','MIR','9/2/26','TIAL'),ltRow(809,'CLM4','20L','MIR','9/2/26','TIAL'),
+  ltRow(810,'CLM15','20L','MIH','09/02/26')];}
+function slot(pos,chem,lt){return {pos,chem:chem||null,lt:chem===DIW?null:(lt||null),active:!!chem}}
+function bench(i,slots,kit){return {i,name:EQUIP[i].id,sub:'BENCH '+(i+1)+' · '+EQUIP[i].type,slots,kit:kit||null,history:[]}}
+function mkRC(base,serial,part,wafer){return {id:base+'-'+serial,base,serial,part,wafer,bench:null,si:0,phase:'off',start:null,arrive:null,rinseEnd:null,rec:{},alarms:[],choose:null,slotPos:null,over:false}}
+function stdRCs(){return PARTS.map(p=>mkRC(KIT,p[0],p[1],p[2]))}
+
+const SCEN={
+ s1:{label:'① 正常單批',note:'<b>正常流程。</b>同套件 5223554 四張 RC 送進 LT-M-087（BENCH 1）。RC 進天線場 → 依當前步驟酸種對到座位 → LT# 自動寫入；開始／結束由作業員按（自動作業員代按）。看 A→B→C 各自拿到 802/803/804；TANK D 是 DIW 沖洗桶，不需 LT#。',
+  build(){return{benches:[bench(0,[slot('A','STM14',802),slot('B','STM21',803),slot('C','CLM4',804),slot('D',DIW)],KIT),bench(1,[slot('A','STM14',807),slot('B','STM21',808),slot('C','CLM4',809),slot('D',DIW)],null),bench(2,[slot('A'),slot('B'),slot('C'),slot('D')],null),bench(3,[slot('A'),slot('B'),slot('C'),slot('D')],null)],rcs:stdRCs(),send:[[0,0],[1,0],[2,0],[3,0]]}}},
+ s2:{label:'② 混批同台',note:'<b>同一 BENCH 兩批不同步驟。</b>-1、-2 已做到 C Soak，-3、-4 剛進 A Soak，同時在 LT-M-087。天線分不出座位，但每張 RC 帶自己的步驟指標，各自對到 CLM4/804 與 STM14/802 —— 不需要每座位一支天線。',
+  build(){const s=SCEN.s1.build();s.rcs[0].si=2;s.rcs[1].si=2;s.setup=()=>{sim.lt.find(l=>l.n===802).count=2;sim.lt.find(l=>l.n===803).count=2};s.rcs[0].rec={A:{lt:802,tray:'LT-M-087-A',start:'07:31:10',end:'07:40:20',auto:true},B:{lt:803,tray:'LT-M-087-B',start:'07:46:02',end:'07:46:19',auto:true}};s.rcs[1].rec={A:{lt:802,tray:'LT-M-087-A',start:'07:33:00',end:'07:37:05',auto:true},B:{lt:803,tray:'LT-M-087-B',start:'07:47:10',end:'07:47:27',auto:true}};return s}},
+ s3:{label:'③ 放錯套件',note:'<b>規則 8：套件一致性。</b>LT-M-087 綁定 5223554，一張 5223557-10（別的套件）混進來。天線一讀到 base 編號不同 → 抬頭螢幕紅字 ALARM，不寫入任何 LT#。純軟體檢查，不需硬體。',
+  build(){const s=SCEN.s1.build();s.rcs.push(mkRC('5223557','10','FACE PLATE',6000));s.send=[[0,0],[1,0],[4,0]];return s}},
+ s4:{label:'④ 酸種缺席',note:'<b>DEPLOY 檢查。</b>LT-M-088（BENCH 2）的 C 座位是 NA（沒有 CLM4）。RC 走到 C Soak 時系統找不到酸桶 → 告警「酸種缺席」，等調度人員在右邊面板把 C 座位設成 CLM4 + LT# 後自動接續。',
+  build(){const s=SCEN.s1.build();s.benches[1].slots[2]=slot('C');s.benches[1].kit=KIT;s.setup=()=>{sim.lt.find(l=>l.n===807).count=1;sim.lt.find(l=>l.n===808).count=1};s.rcs[0].si=2;s.rcs[0].rec={A:{lt:807,tray:'LT-M-088-A',start:'07:30:00',end:'07:39:00',auto:true},B:{lt:808,tray:'LT-M-088-B',start:'07:45:00',end:'07:45:18',auto:true}};s.send=[[0,1],[1,1]];return s}},
+ s5:{label:'⑤ 計數換酸',note:'<b>酸的壽命用計數管。</b>STM14 門檻 15 顆，LT 802 已經泡過 13 顆。四張 RC 進 LT-M-087，每張 A Soak 按「結束」計數 +1；到 15 → 桶變黃、螢幕提示「請換酸」（只提示不擋）。30 秒後腳本模擬調度人員把 A 座位換成 807（計數從 0），還在 802 裡泡的 RC 保留 802，之後進 A Soak 的拿 807。',
+  build(){const s=SCEN.s1.build();s.send=[[0,0],[1,0],[2,0],[3,0]];s.setup=()=>{sim.lt.find(l=>l.n===802).count=13};s.script=[{when(){const l=sim.lt.find(x=>x.n===802);if(l.due){if(!this.t0)this.t0=sim.t;return sim.t-this.t0>=30}return false},do(){applyDeploy(0,[['A','STM14',807]],'（腳本：調度人員換酸）')}}];return s}},
+
+};
+
+function load(key){
+  scenKey=key; stop();
+  const s=SCEN[key].build();
+  sim={t:8*3600,lt:baseLT(),thr:Object.assign({},THR_DEFAULT),benches:s.benches,rcs:s.rcs,log:[],script:s.script||[],later:s.later||[]};
+  if(s.setup)s.setup();
+  selected=null;
+  document.getElementById('scenNote').innerHTML=SCEN[key].note;
+  document.querySelectorAll('#scen button').forEach(b=>b.classList.toggle('on',b.dataset.k===key));
+  logE('deploy','兵推重置：'+SCEN[key].label);
+  sim.benches.forEach(b=>{if(b.kit)logE('deploy',b.name+' 綁定套件 '+b.kit+'；座位 '+b.slots.map(x=>x.pos+':'+(x.active?(x.chem===DIW?'DIW':x.chem+'/'+x.lt):'NA')).join(' '))});
+  (s.send||[]).forEach(([ri,bi])=>moveRC(sim.rcs[ri],bi));
+  render(); renderDeploy(); renderThr();
+}
+
+// ---------- time ----------
+function fmt(t){t=Math.floor(t)%86400;const h=Math.floor(t/3600),m=Math.floor(t%3600/60),s=t%60;return [h,m,s].map(x=>String(x).padStart(2,'0')).join(':')}
+function mmss(sec){sec=Math.max(0,Math.floor(sec));return Math.floor(sec/60)+':'+String(sec%60).padStart(2,'0')}
+function logE(kind,msg){sim.log.push({t:sim.t,kind,msg});if(sim.log.length>400)sim.log.shift()}
+
+function play(){if(timer)return;timer=setInterval(()=>{tick(speed*0.25)},250);document.getElementById('btnPlay').textContent='❚❚ 暫停'}
+function stop(){clearInterval(timer);timer=null;document.getElementById('btnPlay').textContent='▶ 開始'}
+
+function targetSec(rc,k){const st=STEPS[k];if(k==='A')return Math.min(st.max,Math.max(st.min,Math.round(rc.wafer/1000)*60));if(k==='B')return 17;return 150}
+
+function tick(dt){
+  const t0=sim.t; sim.t+=dt; const auto=document.getElementById('autoOp').checked;
+  sim.script.forEach(ev=>{if(!ev.done&&(ev.when?ev.when():sim.t>=8*3600+ev.at)){ev.done=true;ev.do()}});
+  sim.later.forEach(ev=>{if(!ev.done&&sim.t>=8*3600+ev.at){ev.done=true;moveRC(sim.rcs[ev.rc],ev.b)}});
+  sim.rcs.forEach(rc=>{
+    if(rc.bench==null)return;
+    const k=ORDER[rc.si];
+    if(rc.phase==='idle'&&rc.rec[k]&&rc.rec[k].lt&&auto&&sim.t-rc.arrive>=15){pressStart(rc)}
+    if(rc.phase==='soaking'){
+      const el=sim.t-rc.start,tg=targetSec(rc,k);
+      if(el>STEPS[k].max&&!rc.over){rc.over=true;const crit=k==='B';logE(crit?'alarm':'warn',rc.id+' '+STEPS[k].name+' 超過上限 '+STEPS[k].max+'s'+(crit?'（B Soak critical）':''));rc.alarms.push({w:!crit,m:STEPS[k].name+' 超時 '+fmt(sim.t)})}
+      if(auto){const delay=k==='B'?1:20;if(el>=tg+delay)pressEnd(rc)}
+    }
+    if(rc.phase==='rinse'&&sim.t>=rc.rinseEnd){
+      rc.si++;rc.phase='idle';rc.arrive=sim.t;rc.over=false;
+      if(rc.si>=ORDER.length){rc.phase='done';logE('auto',rc.id+' C Soak 完成 → 離開 '+sim.benches[rc.bench].name+'，前往 Oven（卡隨件走）');rc.bench=null;return}
+      logE('auto',rc.id+' 沖洗完成，進入 '+STEPS[ORDER[rc.si]].name);resolve(rc);
+    }
+  });
+  render();
+}
+
+// ---------- events ----------
+function moveRC(rc,bi){
+  if(rc.phase==='done')return;
+  if(rc.bench===bi)return;
+  if(rc.bench!=null){const ob=sim.benches[rc.bench];if(rc.phase==='soaking'){logE('alarm',rc.id+' 泡酸中離開 '+ob.name+'（TAG_LEAVE_STATION）— 未按結束');rc.alarms.push({m:'泡酸中離站 '+fmt(sim.t)});rc.phase='idle'}else logE('auto',rc.id+' TAG_LEAVE_STATION '+ob.name)}
+  rc.bench=bi;rc.choose=null;rc.slotPos=null;
+  if(bi==null){rc.phase='off';render();return}
+  const b=sim.benches[bi];rc.arrive=sim.t;rc.phase='idle';
+  logE('auto',rc.id+' TAG_AT_STATION '+b.name+'（RSSI 到站，預設開始時間 '+fmt(sim.t)+'）');
+  if(b.kit&&b.kit!==rc.base){logE('alarm','ALARM '+b.name+'：'+rc.id+' 套件 '+rc.base+' ≠ 綁定 '+b.kit+' → 放錯套件，不寫入 LT#');rc.alarms.push({m:'放錯套件 '+b.name+' '+fmt(sim.t)});rc.phase='blocked';render();return}
+  if(!b.kit){b.kit=rc.base;logE('deploy',b.name+' 首張 RC 到站，自動綁定套件 '+rc.base)}
+  resolve(rc);render();
+}
+function resolve(rc){
+  const b=sim.benches[rc.bench],k=ORDER[rc.si],chem=STEPS[k].chem;
+  if(rc.rec[k]&&rc.rec[k].end)return;
+  const cands=b.slots.filter(s=>s.active&&s.chem===chem);
+  if(cands.length===0){logE('alarm','ALARM '+b.name+'：'+rc.id+' '+STEPS[k].name+' 需要 '+chem+'，此 BENCH 無 active 座位 → 酸種缺席，等待 DEPLOY');rc.alarms.push({m:'酸種缺席 '+chem+' '+fmt(sim.t)});rc.rec[k]={lt:null,tray:null,start:null,end:null};rc.choose=null;return}
+  bindSlot(rc,cands[0]);
+}
+function bindSlot(rc,s){
+  const b=sim.benches[rc.bench],k=ORDER[rc.si];
+  rc.choose=null;rc.slotPos=s.pos;
+  rc.rec[k]={lt:s.lt,tray:b.name+'-'+s.pos,start:null,end:null,auto:true};
+  logE('auto',rc.id+' '+STEPS[k].name+' → 座位 '+s.pos+'，自動寫入 LT# '+s.lt+'、Tray# '+rc.rec[k].tray);
+}
+function pressStart(rc){const k=ORDER[rc.si];if(!rc.rec[k]||!rc.rec[k].lt)return;rc.phase='soaking';rc.start=sim.t;rc.over=false;rc.rec[k].start=fmt(sim.t);logE('key',rc.id+' 開始 '+STEPS[k].name+'（目標 '+mmss(targetSec(rc,k))+'）');render()}
+function checkDue(l){const th=sim.thr[l.chem]||0;if(l.count>=th&&!l.due){l.due=true;logE('alarm','換酸提示：'+l.chem+' LT '+l.n+' 累計 '+l.count+' 顆已達門檻 '+th+'，請換酸（只提示，不擋）')}else if(l.count<th)l.due=false}
+function countLT(rc,k){const n=rc.rec[k]&&rc.rec[k].lt;const l=sim.lt.find(x=>x.n===n);if(!l)return;l.count++;logE('auto','計數：'+l.chem+' LT '+l.n+' 累計 '+l.count+' / '+(sim.thr[l.chem]||0)+' 顆（'+rc.id+'）');checkDue(l)}
+function pressEnd(rc){const k=ORDER[rc.si];rc.phase='rinse';rc.rec[k].end=fmt(sim.t);countLT(rc,k);rc.rinseEnd=sim.t+STEPS[k].rinse;const el=sim.t-rc.start;logE('key',rc.id+' 結束 '+STEPS[k].name+'，實泡 '+mmss(el)+(el<STEPS[k].min?'（低於下限！）':'')+' → DIW 沖洗/HPW');if(el<STEPS[k].min){rc.alarms.push({w:true,m:STEPS[k].name+' 低於下限 '+mmss(el)})}render()}
+function applyDeploy(bi,changes,tag){
+  const b=sim.benches[bi];
+  {const after=b.slots.map(s=>{const c=changes.find(x=>x[0]===s.pos);if(!c)return s.active?s.chem:null;return (c[1]===null||c[3]===false)?null:c[1]});
+   const seen={},dup=[];after.forEach(c=>{if(c&&c!==DIW){if(seen[c])dup.push(c);seen[c]=1}});
+   if(dup.length){logE('alarm',b.name+' DEPLOY 拒絕：同酸種只能設一桶（'+[...new Set(dup)].join(',')+'）。同一批 RC 進 BENCH 就照設定一起跑，不做選桶。');renderLog();return}}
+  changes.forEach(([pos,chem,lt,active])=>{const s=b.slots.find(x=>x.pos===pos);const before=s.active?(s.chem===DIW?'DIW':s.chem+'/'+s.lt):'NA';
+    if(chem===null||active===false){s.active=false;s.chem=null;s.lt=null}else{s.active=true;s.chem=chem;s.lt=chem===DIW?null:lt}
+    const after=s.active?(s.chem===DIW?'DIW':s.chem+'/'+s.lt):'NA';if(before!==after){b.history.push({t:sim.t,pos,before,after});logE('deploy',b.name+' 座位 '+pos+'：'+before+' → '+after+'（slot_lt_history）'+(tag||''))}});
+  sim.rcs.filter(r=>r.bench===bi&&(r.phase==='idle'||r.phase==='blocked')).forEach(r=>{if(r.phase==='blocked'){if(b.kit===r.base){r.phase='idle';r.alarms=r.alarms.filter(a=>!a.m.startsWith('放錯'))}else return}const k=ORDER[r.si];if(!(r.rec[k]&&r.rec[k].lt))resolve(r)});
+  render();renderDeploy();
+}
+
+// ---------- render ----------
+function render(){
+  document.getElementById('clock').textContent=fmt(sim.t);
+  const bs=document.getElementById('benches');bs.innerHTML='';
+  sim.benches.forEach(b=>{
+    const here=sim.rcs.filter(r=>r.bench===b.i);
+    const hasAlarm=here.some(r=>r.phase==='blocked'||(r.rec[ORDER[r.si]]&&!r.rec[ORDER[r.si]].lt));
+    const el=document.createElement('div');el.className='bench'+(hasAlarm?' alarm':'');el.dataset.b=b.i;
+    const ltOf=n=>sim.lt.find(x=>x.n===n);const dueList=b.slots.filter(s=>s.active&&s.lt&&ltOf(s.lt)&&ltOf(s.lt).due);
+    el.innerHTML=`<div class="bench-head"><div><h2>${b.name}</h2><div class="sub">${b.sub}</div><div class="kit">套件 ${b.kit?'<b>'+b.kit+'</b>':'<span class="pill g">未綁定</span>'}</div></div>
+      <div class="ant"><span class="dot ${here.length?'live':''}"></span>天線 ×1 · ${here.length} tag</div></div>
+      <div class="tanks">${b.slots.map(s=>{const occ=here.filter(r=>(r.phase==='soaking'&&r.slotPos===s.pos)||(r.phase==='rinse'&&s.chem===DIW));const l=s.lt?ltOf(s.lt):null;return `<div class="tank ${s.active?'':'na'} ${s.chem===DIW?'diw':''} ${l&&l.due?'due':''}"><div><div class="pos">TANK ${s.pos}</div>${s.active?(s.chem===DIW?`<div class="chem">DIW</div><div class="lt">沖洗 · 無 LT#</div>`:`<div class="chem">${s.chem}</div><div class="lt">LT <b>${s.lt}</b>${l&&l.kit?' · '+l.kit:''}</div><div class="cnt">已泡 ${l?l.count:0} / ${sim.thr[s.chem]||0}</div>`):'<div class="lt">NA</div>'}</div><div class="occ">${occ.map(r=>'<i class="'+(r.over?'over':'')+'" title="'+r.id+'"></i>').join('')}</div></div>`}).join('')}</div>
+      <div class="hud"><div class="hd"><span>HEAD-UP SCREEN</span><span>${fmt(sim.t)}</span></div>${dueList.map(s=>`<div class="due">⚠ ${s.chem} LT ${s.lt} 已泡 ${ltOf(s.lt).count} 顆 ≥ ${sim.thr[s.chem]} → 請換酸（TANK ${s.pos}）</div>`).join('')}${here.length?here.map(hudRow).join(''):'<div class="empty">— 無 RC 在站 —</div>'}</div>`;
+    el.addEventListener('dragover',e=>{e.preventDefault();el.classList.add('drop')});el.addEventListener('dragleave',()=>el.classList.remove('drop'));
+    el.addEventListener('drop',e=>{e.preventDefault();el.classList.remove('drop');const rc=sim.rcs.find(r=>r.id===e.dataTransfer.getData('text'));if(rc)moveRC(rc,b.i)});
+    bs.appendChild(el);
+  });
+  // staging
+  const st=document.getElementById('stage');st.innerHTML='';
+  const off=sim.rcs.filter(r=>r.bench==null);
+  document.getElementById('stageCount').textContent=off.length+' 張待命 · '+sim.rcs.filter(r=>r.bench!=null).length+' 張在站 · '+sim.rcs.filter(r=>r.phase==='done').length+' 張完成';
+  off.forEach(r=>{const c=document.createElement('div');c.className='rc'+(r.base!==KIT?' other':'')+(selected===r.id?' sel':'')+(r.phase==='done'?' done':'');c.draggable=r.phase!=='done';
+    c.innerHTML=`<div class="id">${r.id}</div><div class="pn">${r.part} · ${r.wafer.toLocaleString()} wafer</div><div class="step">${r.phase==='done'?'<span class="pill a">A/B/C 完成 → Oven</span>':'下一步 '+STEPS[ORDER[r.si]].name}</div>`;
+    c.addEventListener('click',()=>{selected=r.id;render()});c.addEventListener('dragstart',e=>{e.dataTransfer.setData('text',r.id)});st.appendChild(c)});
+  st.ondragover=e=>{e.preventDefault();st.classList.add('drop')};st.ondragleave=()=>st.classList.remove('drop');st.ondrop=e=>{e.preventDefault();st.classList.remove('drop');const rc=sim.rcs.find(r=>r.id===e.dataTransfer.getData('text'));if(rc)moveRC(rc,null)};
+  renderRec();renderLog();renderLT();
+}
+function hudRow(r){
+  const k=ORDER[r.si],st=STEPS[k],rec=r.rec[k]||{};let status='',cls='';
+  if(r.phase==='blocked'){cls='red';status='<span class="red">ALARM 放錯套件 · 綁定 '+sim.benches[r.bench].kit+'</span>'}
+  else if(!rec.lt){cls='red';status='<span class="red">ALARM 酸種缺席 '+st.chem+' → 等待 DEPLOY</span>'}
+  else if(r.phase==='idle'){status=`<span>${st.name} · ${st.chem} LT <b>${rec.lt}</b> <span class="amber">待開始</span></span><button class="go" data-start="${r.id}">開始</button>`}
+  else if(r.phase==='soaking'){const el=sim.t-r.start,tg=targetSec(r,k);const c=el>st.max?'red':el>=tg?'amber':'';status=`<span>${st.name} · LT <b>${rec.lt}</b> <span class="tmr ${c}">${mmss(el)}</span>/${mmss(tg)}${el>st.max?' <span class="red">超時</span>':''}</span><button class="stop" data-end="${r.id}">結束</button>`}
+  else if(r.phase==='rinse'){status=`<span>${st.name} 完成 · ${sim.benches[r.bench].slots.some(x=>x.chem===DIW)?'TANK '+sim.benches[r.bench].slots.find(x=>x.chem===DIW).pos+' DIW 沖洗':'DIW/HPW 沖洗'} <span class="tmr">${mmss(r.rinseEnd-sim.t)}</span> → ${r.si+1<ORDER.length?STEPS[ORDER[r.si+1]].name:'Oven'}</span>`}
+  return `<div class="row ${cls} ${selected===r.id?'sel':''}" data-sel="${r.id}"><span class="n">${r.id}</span><span class="p">${r.part}</span><div class="st">${status}</div></div>`;
+}
+function renderRec(){
+  const el=document.getElementById('rec');
+  if(document.activeElement&&document.activeElement.classList&&document.activeElement.classList.contains('recin')&&el.contains(document.activeElement))return;const r=sim.rcs.find(x=>x.id===selected);
+  if(!r){el.innerHTML='<div class="eyebrow">RC 記錄檢視</div><p style="color:var(--muted);margin:6px 0 0">點一張 RC 卡或抬頭螢幕上的列，看系統寫進 RC 的欄位（= 現在手寫的格子）。</p>';return}
+  const rows=ORDER.map(k=>{const s=STEPS[k],rc=r.rec[k]||{};const man=rc.manual||{};const cell=(f,v,ph)=>`<td><input class="recin mono ${man[f]?'man':(v&&rc.auto?'auto':'')}" data-rc="${r.id}" data-k="${k}" data-f="${f}" value="${v||''}" placeholder="${ph}"></td>`;return `<tr><td>${s.name}<br><span class="eyebrow">${s.chem}</span></td>${cell('lt',rc.lt,'LT#')}${cell('tray',rc.tray,'Tray#')}${cell('start',rc.start,'HH:MM:SS')}${cell('end',rc.end,'HH:MM:SS')}</tr>`}).join('');
+  el.innerHTML=`<div class="eyebrow">RC 記錄檢視 · ${r.id} ${r.part} <span class="pill g">可手動修改</span></div><table style="margin-top:6px"><tr><th>步驟</th><th>LT#</th><th>Chemical Tray#</th><th>Start</th><th>End</th></tr>${rows}</table>
+    <div style="font-size:11px;color:var(--muted);margin-top:4px"><span class="auto">綠色</span> = 系統自動寫入 · <span class="man">琥珀色</span> = 人工補寫/修改（規則 6：鍵盤 KEY 時間） · 點格子即可改，離開格子生效</div>
+    ${r.alarms.length?'<div class="alarms">'+r.alarms.map(a=>`<div class="${a.w?'w':''}">${a.m}</div>`).join('')+'</div>':''}`;
+}
+document.getElementById('rec').addEventListener('change',e=>{const t=e.target;if(!t.classList.contains('recin'))return;const rc=sim.rcs.find(r=>r.id===t.dataset.rc);if(!rc)return;const k=t.dataset.k,f=t.dataset.f;rc.rec[k]=rc.rec[k]||{lt:null,tray:null,start:null,end:null};const old=rc.rec[k][f];let v=t.value.trim();if(f==='lt')v=v?(+v||v):null;if(!v)v=null;if((old||null)===(v||null))return;rc.rec[k][f]=v;rc.rec[k].manual=rc.rec[k].manual||{};rc.rec[k].manual[f]=true;
+  if(f==='lt'&&v){const l=sim.lt.find(x=>x.n===v);if(!l)logE('warn',rc.id+' '+STEPS[k].name+' 手動填的 LT# '+v+' 不在主檔');}
+  logE('key',rc.id+' '+STEPS[k].name+' 人工修改 '+({lt:'LT#',tray:'Tray#',start:'Start',end:'End'})[f]+'：'+(old||'—')+' → '+(v||'—')+'（鍵盤補寫）');renderRec();renderLog()});
+function renderLog(){const el=document.getElementById('log');el.innerHTML=sim.log.slice(-120).reverse().map(e=>`<div><span class="t">${fmt(e.t)}</span><span class="k-${e.kind}">${e.msg}</span></div>`).join('')}
+function renderLT(){const used=new Set();sim.benches.forEach(b=>b.slots.forEach(s=>{if(s.active&&s.lt)used.add(s.lt)}));
+  document.getElementById('ltlist').innerHTML='<tr><th>LT#</th><th>酸種</th><th>量</th><th>配製人 / 日期</th><th>Kit name 註記</th><th>累計泡過</th></tr>'+sim.lt.map(l=>{const th=sim.thr[l.chem]||0;const c=l.count>=th?'cnt due':l.count>=th*0.8?'cnt near':'cnt';return `<tr class="${used.has(l.n)?'used':''}"><td class="mono">${l.n}</td><td class="mono">${l.chem}</td><td>${l.liter}</td><td>${l.by} ${l.date}</td><td>${l.kit||'<span class="blank">—</span>'}</td><td class="mono ${c}">${l.count} / ${th}${l.count>=th?' 請換酸':''}</td></tr>`}).join('')}
+function renderThr(){document.getElementById('thr').innerHTML=CHEMS.map(c=>`<label>${c}<input type="number" min="1" data-thr="${c}" value="${sim.thr[c]}"></label>`).join('')}
+document.getElementById('thr').addEventListener('change',e=>{const c=e.target.dataset.thr;if(!c)return;sim.thr[c]=Math.max(1,+e.target.value||1);logE('deploy','換酸門檻 '+c+' → '+sim.thr[c]+' 顆');sim.lt.forEach(l=>{if(l.chem===c)checkDue(l)});render()});
+function renderDeploy(){
+  const bi=+document.getElementById('depBench').value,b=sim.benches[bi];
+  const el=document.getElementById('deploy');
+  el.innerHTML='<div class="slotrow eyebrow"><span></span><span>酸種</span><span>LT#（主檔）</span><span>Active</span></div>'+b.slots.map(s=>`<div class="slotrow" data-pos="${s.pos}"><span class="pos">${s.pos}</span>
+    <select class="chem"><option value="">NA</option>${CHEMS.map(c=>`<option ${s.chem===c?'selected':''}>${c}</option>`).join('')}<option value="DIW" ${s.chem===DIW?'selected':''}>DIW（沖洗，無 LT#）</option></select>
+    <select class="lt" ${s.chem===DIW?'disabled':''}>${s.chem===DIW?'<option value="">— 不需 LT# —</option>':''}${sim.lt.filter(l=>l.chem===s.chem).map(l=>`<option ${s.lt===l.n?'selected':''} value="${l.n}">${l.n}${l.kit?' '+l.kit:''}（${l.by} ${l.date}）</option>`).join('')}</select>
+    <input type="checkbox" class="act" ${s.active?'checked':''}></div>`).join('')+
+    `<div class="kitrow"><span class="eyebrow">綁定套件 base</span><input class="mono" id="depKit" value="${b.kit||''}" placeholder="首張 RC 到站自動綁定"></div>`;
+  el.querySelectorAll('.slotrow[data-pos]').forEach(row=>{row.querySelector('.chem').addEventListener('change',e=>{const c=e.target.value;const ltSel=row.querySelector('.lt');ltSel.disabled=(c===DIW);ltSel.innerHTML=(c===DIW?'<option value="">— 不需 LT# —</option>':'')+sim.lt.filter(l=>l.chem===c).map(l=>`<option value="${l.n}">${l.n}${l.kit?' '+l.kit:''}（${l.by} ${l.date}）</option>`).join('');row.querySelector('.act').checked=!!c})});
+}
+
+// ---------- wiring ----------
+document.getElementById('sendBtns').innerHTML=EQUIP.map((e,i)=>`<button class="small" data-send="${i}">${e.id}</button>`).join('');
+document.getElementById('depBench').innerHTML=EQUIP.map((e,i)=>`<option value="${i}">${e.id}（BENCH ${i+1}）</option>`).join('');
+document.getElementById('layout').innerHTML=[['Parts Incoming'],['Part Cart'],['LT-M-087','b',0],['LT-M-088','b',1],['Bench'],['LT-E-109','b',2],['LT-M-136','b',3],['LT-E-416 / 409','Auto HPW'],['LT-E-161','HPW'],['LT-E-193 / 101','Oven']].map(x=>`<div class="lo ${x[1]==='b'?'hood':''}">${x[1]==='b'?'<b>'+x[0]+'</b><span>BENCH '+(x[2]+1)+' · 天線 ×1</span>':'<b>'+x[0]+'</b>'+(x[1]?'<span>'+x[1]+'</span>':'')}</div>`).join('<i class="lo-arrow">→</i>');
+document.getElementById('scen').innerHTML=Object.keys(SCEN).map(k=>`<button data-k="${k}">${SCEN[k].label}</button>`).join('');
+document.getElementById('scen').addEventListener('click',e=>{const k=e.target.dataset.k;if(k)load(k)});
+document.getElementById('btnPlay').addEventListener('click',()=>timer?stop():play());
+document.getElementById('speed').addEventListener('change',e=>speed=+e.target.value);
+document.getElementById('depBench').addEventListener('change',renderDeploy);
+document.getElementById('newChem').innerHTML=CHEMS.map(c=>`<option>${c}</option>`).join('');
+document.getElementById('btnAddLt').addEventListener('click',()=>{const n=Math.max(...sim.lt.map(l=>l.n))+1;const chem=document.getElementById('newChem').value;sim.lt.push(ltRow(n,chem,document.getElementById('newLiter').value,document.getElementById('newBy').value||'—','9/3/26',document.getElementById('newKit').value.trim()));const kt=document.getElementById('newKit').value.trim();logE('deploy','LT 主檔新增 '+n+' '+chem+(kt?'（'+kt+'）':'')+'，計數從 0 開始');render();renderDeploy()});
+document.getElementById('btnApply').addEventListener('click',()=>{const bi=+document.getElementById('depBench').value;const ch=[...document.querySelectorAll('#deploy .slotrow[data-pos]')].map(row=>{const c=row.querySelector('.chem').value;return [row.dataset.pos,c||null,+row.querySelector('.lt').value||null,row.querySelector('.act').checked]});
+  const kit=document.getElementById('depKit').value.trim();const b=sim.benches[bi];if(kit!==(b.kit||'')){logE('deploy',b.name+' 套件綁定 '+(b.kit||'無')+' → '+(kit||'無'));b.kit=kit||null}
+  applyDeploy(bi,ch,'');renderDeploy()});
+document.getElementById('btnCopy').addEventListener('click',()=>{const bi=+document.getElementById('depBench').value;const src=sim.benches[bi];sim.benches.forEach(b=>{if(b.i===bi)return;applyDeploy(b.i,src.slots.map(s=>[s.pos,s.chem,s.lt,s.active]),'（模板套用自 '+src.name+'）')})});
+document.getElementById('btnTplSave').addEventListener('click',()=>{const name=document.getElementById('tplName').value.trim();if(!name){alert_('請先輸入模板名稱');return}const slots=[...document.querySelectorAll('#deploy .slotrow[data-pos]')].map(row=>{const c=row.querySelector('.chem').value;const act=row.querySelector('.act').checked;if(!c||!act)return [row.dataset.pos,null,null];return [row.dataset.pos,c,c===DIW?null:(+row.querySelector('.lt').value||null)]});
+  const i=templates.findIndex(t=>t.name===name);const t={name,slots};if(i>=0)templates[i]=t;else templates.push(t);saveTemplates();renderTpl();document.getElementById('tplSel').value=String(i>=0?i:templates.length-1);document.getElementById('tplName').value='';logE('deploy','模板「'+name+'」已儲存：'+slots.map(x=>x[0]+':'+(x[1]?(x[1]===DIW?'DIW':x[1]+'/'+x[2]):'NA')).join(' '));renderLog()});
+document.getElementById('btnTplApply').addEventListener('click',()=>{const t=templates[+document.getElementById('tplSel').value];if(!t)return;const bi=+document.getElementById('depBench').value;applyDeploy(bi,tplToChanges(t),'（模板「'+t.name+'」）');renderDeploy()});
+document.getElementById('btnTplAll').addEventListener('click',()=>{const t=templates[+document.getElementById('tplSel').value];if(!t)return;sim.benches.forEach(b=>applyDeploy(b.i,tplToChanges(t),'（模板「'+t.name+'」套用到全部）'));renderDeploy()});
+document.getElementById('btnTplDel').addEventListener('click',()=>{const i=+document.getElementById('tplSel').value;if(!templates[i])return;const n=templates[i].name;templates.splice(i,1);if(!templates.length)templates=TPL_PRESET.map(t=>({...t}));saveTemplates();renderTpl();logE('deploy','模板「'+n+'」已刪除');renderLog()});
+renderTpl();
+document.getElementById('btnClearLog').addEventListener('click',()=>{sim.log=[];renderLog()});
+document.getElementById('btnAddOther').addEventListener('click',()=>{const n=sim.rcs.filter(r=>r.base==='5223557').length+10;sim.rcs.push(mkRC('5223557',String(n),'FACE PLATE',6000));render()});
+document.querySelectorAll('[data-send]').forEach(b=>b.addEventListener('click',()=>{const rc=sim.rcs.find(r=>r.id===selected);if(!rc){alert_('先點一張待命區的 RC 卡');return}moveRC(rc,+b.dataset.send)}));
+document.body.addEventListener('click',e=>{
+  const t=e.target;
+  if(t.dataset.start){pressStart(sim.rcs.find(r=>r.id===t.dataset.start));return}
+  if(t.dataset.end){pressEnd(sim.rcs.find(r=>r.id===t.dataset.end));return}
+  const row=t.closest('[data-sel]');if(row){selected=row.dataset.sel;render()}
+});
+function alert_(m){logE('warn',m);renderLog()}
+load('s1');
+</script>
+</body>
+</html>
